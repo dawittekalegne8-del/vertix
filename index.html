@@ -1,0 +1,160 @@
+import Link from "next/link";
+import { ArrowRight, Gift, Globe2, Lock, RotateCcw, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { AgeSelector } from "@/components/AgeSelector";
+import { BookCover } from "@/components/BookCover";
+import { BookRail, SectionHeading } from "@/components/BookRail";
+import { CategoryCard } from "@/components/CategoryCard";
+import { HeroSection } from "@/components/HeroSection";
+import { MotifArt } from "@/components/MotifArt";
+import { NewsletterForm } from "@/components/NewsletterForm";
+import { CATEGORIES, COLLECTIONS } from "@/data/taxonomy";
+import { getAgeCounts, getCategoryCounts, getHomeData } from "@/lib/books";
+
+export const dynamic = "force-dynamic";
+
+const TRUST = [
+  { icon: ShieldCheck, t: "Safe & age-appropriate", d: "Every title is filed by age band and reading level." },
+  { icon: Truck, t: "Worldwide shipping", d: "Free over $35 in the US and $60 internationally." },
+  { icon: Lock, t: "Secure checkout", d: "Payments are handled by trusted providers." },
+  { icon: RotateCcw, t: "Easy returns", d: "30 days on unread, undamaged copies." },
+];
+
+export default async function HomePage() {
+  const [home, ageCounts, catCounts] = await Promise.all([getHomeData(), getAgeCounts(), getCategoryCounts()]);
+  const [spot, ...restPicks] = home.editors;
+
+  return (
+    <>
+      <HeroSection total={home.total} covers={home.featured.slice(0, 3)} />
+
+      <section aria-label="Why families choose Moonlark" className="container-x mt-2">
+        <ul className="grid gap-px overflow-hidden rounded-3xl bg-ink-100 shadow-soft ring-1 ring-ink-100 sm:grid-cols-2 lg:grid-cols-4" role="list">
+          {TRUST.map(({ icon: Icon, t, d }) => (
+            <li key={t} className="flex items-start gap-3 bg-white p-5">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-lilac-100 text-lilac-500"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+              <div><p className="text-sm font-extrabold text-ink-900">{t}</p><p className="mt-0.5 text-xs leading-relaxed text-ink-500">{d}</p></div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="age" aria-labelledby="age-h" className="container-x scroll-mt-40 pt-14 sm:pt-20">
+        <SectionHeading id="age-h" eyebrow="Age-based recommendations" title="Shop by age" description="Stories chosen for where your child is right now, from first words to first chapter books and beyond." href="/find" hrefLabel="Find the perfect book" />
+        <AgeSelector counts={ageCounts} />
+      </section>
+
+      <BookRail eyebrow="Staff favourites" title="Featured children's books" description="A hand-picked mix from across the shelves." href="/books?flag=featured" books={home.featured} />
+      <BookRail eyebrow="Reader favourites" title="Bestselling books" description="Ranked by sample popularity. The demo catalogue uses placeholder rankings, not real sales." href="/bestsellers" books={home.bestsellers} numbered />
+      <BookRail eyebrow="Just published" title="New releases" href="/new-releases" books={home.newReleases} />
+
+      {spot && (
+        <section aria-labelledby="ed-h" className="container-x py-10 sm:py-14">
+          <div className="relative isolate overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-ink-900 via-ink-800 to-ink-600 p-6 text-white sm:p-10">
+            <div aria-hidden="true" className="absolute -right-24 -top-24 -z-10 h-80 w-80 rounded-full bg-lilac-500/30 blur-3xl" />
+            <div aria-hidden="true" className="hero-sparkle absolute inset-0 -z-10 opacity-60" />
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-butter-400">Editor&apos;s picks</p>
+            <h2 id="ed-h" className="mt-1 font-display text-3xl font-bold sm:text-4xl">Curated by our editors</h2>
+            <p className="mt-2 max-w-2xl text-sm text-ink-100">An editorial selection of books we think families will love. These are our own recommendations, not awards.</p>
+            <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+              <Link href={`/book/${spot.slug}`} className="group grid items-center gap-6 rounded-3xl bg-white/[0.07] p-5 ring-1 ring-white/15 transition hover:bg-white/[0.11] sm:grid-cols-[11rem_1fr]">
+                <div className="book-tilt mx-auto w-40 sm:w-full"><BookCover book={spot} width={320} sizes="176px" /></div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-butter-400">{spot.categoryName} · Ages {spot.ageLabel.replace(" years", "")}</p>
+                  <h3 className="mt-1 font-display text-2xl font-bold leading-tight">{spot.title}</h3>
+                  <p className="mt-1 text-sm text-ink-100">by {spot.author}</p>
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-ink-100">{spot.description}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-4"><span className="font-display text-2xl font-bold">${(spot.effectivePrice).toFixed(2)}</span><span className="inline-flex items-center gap-1.5 rounded-full bg-butter-400 px-4 py-2 text-sm font-extrabold text-ink-900 transition group-hover:bg-butter-200">View book <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></div>
+                </div>
+              </Link>
+              <ul className="grid gap-3 sm:grid-cols-2" role="list">
+                {restPicks.map((b) => (
+                  <li key={b.id}>
+                    <Link href={`/book/${b.slug}`} className="group flex h-full gap-3 rounded-3xl bg-white/[0.07] p-3 ring-1 ring-white/15 transition hover:bg-white/[0.12]">
+                      <div className="w-16 shrink-0"><BookCover book={b} width={140} sizes="64px" /></div>
+                      <div className="min-w-0"><h3 className="line-clamp-2 font-display text-[15px] font-bold leading-snug">{b.title}</h3><p className="mt-0.5 truncate text-xs text-ink-200">{b.author}</p><p className="mt-1.5 text-sm font-bold text-butter-400">${b.effectivePrice.toFixed(2)}</p></div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section aria-labelledby="col-h" className="container-x py-8 sm:py-12">
+        <SectionHeading id="col-h" eyebrow="Popular story collections" title="Curated for every mood" description="Themed shelves that bring the right stories together." href="/collections" hrefLabel="All collections" />
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+          {COLLECTIONS.slice(0, 6).map((c) => {
+            const covers = home.collections.find((x) => x.slug === c.slug)?.covers ?? [];
+            return (
+              <li key={c.slug}>
+                <Link href={`/collections/${c.slug}`} className="group relative isolate flex h-full min-h-[11rem] items-end justify-between gap-3 overflow-hidden rounded-3xl p-5 shadow-soft ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-lift" style={{ background: `linear-gradient(135deg, ${c.colors[0]}, ${c.colors[1]})` }}>
+                  <div className="relative z-10 max-w-[55%] self-center">
+                    <h3 className="font-display text-xl font-bold leading-tight text-ink-900">{c.name}</h3>
+                    <p className="mt-1.5 text-xs font-semibold leading-snug text-ink-700">{c.description}</p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-ink-900">Explore <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" aria-hidden="true" /></span>
+                  </div>
+                  <div className="relative h-32 w-36 shrink-0" aria-hidden="true">
+                    {covers.slice(0, 3).map((b, i) => (
+                      <div key={b.id} className="absolute bottom-0 w-[4.5rem] transition duration-300 group-hover:-translate-y-1" style={{ left: `${i * 28}px`, transform: `rotate(${[-8, 2, 10][i]}deg)`, zIndex: i }}>
+                        <BookCover book={b} width={140} sizes="72px" />
+                      </div>
+                    ))}
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {home.rails.map((r) => <BookRail key={r.key} title={r.title} href={r.href} books={r.items} />)}
+
+      <section aria-labelledby="find-h" className="container-x py-8 sm:py-12">
+        <div className="relative isolate grid items-center gap-6 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-butter-100 via-peach-100 to-lilac-100 p-6 sm:p-10 md:grid-cols-[1.2fr_1fr]">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-coral-600"><Sparkles className="h-4 w-4" aria-hidden="true" /> Find the perfect book</p>
+            <h2 id="find-h" className="mt-2 font-display text-3xl font-bold text-ink-900 sm:text-4xl">Four quick questions. One happy reader.</h2>
+            <p className="mt-3 max-w-lg text-ink-700">Tell us your child&apos;s age, what they love, their reading level and a favourite theme, and we&apos;ll suggest books with reasons for every pick.</p>
+            <Link href="/find" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-ink-900 px-7 py-4 text-base font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-ink-700">Start the book finder <ArrowRight className="h-5 w-5" aria-hidden="true" /></Link>
+          </div>
+          <div className="flex items-end justify-center gap-2" aria-hidden="true">
+            <MotifArt motif="rabbit" seed={3} className="h-40 w-32 animate-float" />
+            <MotifArt motif="dragon" seed={5} className="h-44 w-56 animate-float-slow" />
+            <MotifArt motif="astronaut" seed={9} className="hidden h-40 w-28 animate-float sm:block" />
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="cats-h" className="container-x py-8 sm:py-12">
+        <SectionHeading id="cats-h" eyebrow="Explore categories" title="Twenty worlds to explore" description="From bedtime tales to dinosaurs, space and cultural stories from around the globe." href="/categories" hrefLabel="All categories" />
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5" role="list">
+          {CATEGORIES.map((c) => <li key={c.slug}><CategoryCard category={c} count={catCounts[c.slug]} /></li>)}
+        </ul>
+      </section>
+
+      <section aria-labelledby="nl-h" className="container-x py-6">
+        <div className="relative isolate overflow-hidden rounded-[2.5rem] bg-ink-900 px-6 py-12 text-white sm:px-12 sm:py-16">
+          <div aria-hidden="true" className="absolute -right-20 -top-20 -z-10 h-72 w-72 rounded-full bg-lilac-500/40 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-24 -left-16 -z-10 h-72 w-72 rounded-full bg-coral-500/25 blur-3xl" />
+          <div aria-hidden="true" className="hero-sparkle absolute inset-0 -z-10 opacity-70" />
+          <div className="grid items-center gap-8 lg:grid-cols-2">
+            <div>
+              <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-butter-400"><Gift className="h-4 w-4" aria-hidden="true" /> Storytime newsletter</p>
+              <h2 id="nl-h" className="mt-2 font-display text-3xl font-bold sm:text-4xl">Stories, delivered to your inbox</h2>
+              <p className="mt-3 max-w-md text-ink-100">New releases, age-by-age reading guides and bedtime favourites. About one email a fortnight, never spam.</p>
+              <p className="mt-4 flex items-center gap-2 text-sm text-ink-200"><Globe2 className="h-4 w-4 text-butter-400" aria-hidden="true" /> Readers in 40+ countries</p>
+            </div>
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
+
+      <section className="container-x py-10">
+        <p className="rounded-3xl bg-butter-100 p-5 text-sm leading-relaxed text-ink-700 ring-1 ring-butter-200">
+          <strong className="text-ink-900">About this demo:</strong> the 500 books, authors, ratings, review counts, rankings and stock levels are fictional placeholders so the shop can be explored end to end, and every cover is original artwork made for this project. Replace them from the admin area when you add your real catalogue.
+        </p>
+      </section>
+    </>
+  );
+}
